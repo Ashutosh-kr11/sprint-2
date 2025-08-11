@@ -1,3 +1,5 @@
+<img src="https://github.com/user-attachments/assets/60ca7945-3263-4439-9040-bf3fe1387954" alt="Image" width="100%" />
+
 # License Scanning: Detailed Documentation
 
 ---
