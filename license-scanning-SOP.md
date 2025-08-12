@@ -158,10 +158,6 @@ fossa analyze
 
 ---
 
-Here’s a polished and rephrased version of your section:
-
----
-
 ### **Analyze and Resolve Issues**
 
 **1. Review Scan Results on the FOSSA Dashboard**
