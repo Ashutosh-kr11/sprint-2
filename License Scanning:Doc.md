@@ -295,7 +295,7 @@ After comprehensive analysis and POC validation, we recommend **FOSSA** as the p
 ## **Proof of Concept (POC)**
 
 Follow this link for "License Scanning" POC.
-  > Licence Scanning POC
+  > [Licence Scanning POC](https://github.com/Ashutosh-kr11/sprint-2/blob/main/license-scanning-SOP.md)
 
 ---
 
