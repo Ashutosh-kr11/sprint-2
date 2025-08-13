@@ -189,35 +189,39 @@ graph TD
 
 ## Recommendations & Conclusion
 
-### Primary Recommendation: ESLint + Prettier + TypeScript + npm audit
+### Primary Recommendation: SonarQube (central) + ESLint + Prettier + TypeScript + npm audit
 
-| Aspect | Details |
-|--------|---------|
-| **Recommended Toolchain** | ESLint + Prettier + TypeScript + npm audit |
-| **Target Use Case** | Learning, training, and professional React development |
-| **Total Cost** | Free (all tools open source) |
-| **Setup Time** | 45 minutes |
-| **Learning Curve** | 2-3 weeks |
+| Aspect                     | Details                                                                                    |
+| -------------------------- | ------------------------------------------------------------------------------------------ |
+| **Primary Recommendation** | **SonarQube (central) + ESLint + Prettier + TypeScript + npm audit**                       |
+| **Target Use Case**        | Enterprise / professional React projects needing centralized reporting & enforceable gates |
+| **Cost**                   | SonarQube CE = free to start; SonarQube paid / SonarCloud for advanced features            |
+| **Setup Time**             | \~1–2 hours for basic CI integration                                                       |
+| **Learning Curve**         | Low for devs (ESLint/TS); moderate for SonarQube admins                                    |
+
 
 ### Why This Combination
 
-| Criteria | Justification |
-|----------|---------------|
-| **Comprehensive Coverage** | Code quality + Formatting + Type safety + Security |
-| **Industry Standard** | Most adopted toolchain in React community |
-| **React Optimized** | Specific support for React patterns and best practices |
-| **Learning Value** | Teaches modern React, TypeScript, and security practices |
-| **Free & Open Source** | No licensing costs, extensive community support |
-| **Ecosystem Integration** | Native integration with React build tools and IDEs |
+| Why SonarQube          | Benefit                                              |
+| ---------------------- | ---------------------------------------------------- |
+| Single source of truth | Aggregates linter, typecheck, and SCA results        |
+| Quality gates          | Enforceable pass/fail rules in CI                    |
+| Historical metrics     | Tracks issues, coverage, technical debt over time    |
+| Security analysis      | Flags security hotspots and frontend vulnerabilities |
+| PR integration         | Decorates PRs with actionable findings               |
 
 ### Tool Roles
 
-| Tool | Primary Purpose | React-Specific Benefits |
-|------|----------------|------------------------|
-| **ESLint** | Code quality and React rules | React hooks validation, JSX best practices, component patterns |
-| **Prettier** | Code formatting | Consistent JSX formatting, team style consistency |
-| **TypeScript** | Type checking | Props validation, state management, component contracts |
-| **npm audit** | Dependency security | React library vulnerability scanning |
+| Tool             | Role (SonarQube-centric)                                            |
+| ---------------- | ------------------------------------------------------------------- |
+| SonarQube        | Centralized analysis, quality gates, dashboards, historical metrics |
+| ESLint           | Fast developer feedback, IDE integration, pre-commit checks         |
+| Prettier         | Deterministic formatting to reduce noise                            |
+| TypeScript (tsc) | Compile-time type safety; surface metrics to CI/SonarQube           |
+| npm audit / SCA  | Dependency vulnerability scanning in CI                             |
+
+
+
 
 ---
 
@@ -225,12 +229,11 @@ graph TD
 
 | Tool | When to Add | Benefit |
 |------|-------------|---------|
-| **SonarQube** | Enterprise projects | Centralized reporting, technical debt tracking |
 | **Husky** | Team collaboration | Git hooks for automated local checking |
 | **lint-staged** | Performance optimization | Run linting only on changed files |
 
 
-**Final Recommendation**: The **ESLint + Prettier + TypeScript + npm audit** combination provides the optimal balance of React-specific analysis, modern development practices, and security for both learning and professional React development environments.
+**Final Recommendation**: The **SonarQube (central) + ESLint + Prettier + TypeScript + npm audit** combination provides the optimal balance of React-specific analysis, modern development practices, and security for both learning and professional React development environments.
 
 ---
 
