@@ -55,7 +55,7 @@ Before starting, ensure you have:
 
 Follow this link for "Static code analysis for java CI checks" Doc:
 
-> [Static code analysis for java CI checks Doc](https://github.com/Ashutosh-kr11/sprint-2/blob/main/License%20Scanning%3ADoc.md)
+> [Static code analysis for java CI checks Doc](https://github.com/Ashutosh-kr11/sprint-2/blob/main/Java%20CI%20checks/Static%20code%20analysis%20/Doc.md)
 
 ---
 
