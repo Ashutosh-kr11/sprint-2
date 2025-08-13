@@ -132,6 +132,7 @@ docker run -d \
 7. Generate a token and save it
    <img width="1918" height="983" alt="Image" src="https://github.com/user-attachments/assets/6a68bc86-89df-4716-a038-6be1e8ad4bb6" />
    <img width="1918" height="988" alt="Image" src="https://github.com/user-attachments/assets/4eef95d4-1ac1-41e3-a4c8-51e850859bfb" />
+   <img width="1918" height="986" alt="Image" src="https://github.com/user-attachments/assets/c74858b5-08ef-4cee-81a5-a91eaba35045" />
 
 ---
 
@@ -139,15 +140,12 @@ docker run -d \
 
 ### Method 1: Using Maven (Recommended)
 ```bash
-mvn clean install -DskipTests
-mvn sonar:sonar \
-  -DskipTests \
+mvn clean verify sonar:sonar \
   -Dsonar.projectKey=Salary-API \
   -Dsonar.host.url=http://localhost:9000 \
   -Dsonar.login=your-generated-token
 ```
-  
-  <img width="1918" height="847" alt="Image" src="https://github.com/user-attachments/assets/f0883af8-dff3-431f-acaf-3bba40852d98" />
+ <img width="1918" height="872" alt="Image" src="https://github.com/user-attachments/assets/d9994477-4ba5-4c1b-bf7c-65b61aeef336" />  
   
 ### Method 2: Using SonarQube Scanner (Alternative)
 ```bash
@@ -163,7 +161,7 @@ sonar-scanner
 - Go to: http://localhost:9000/dashboard?id=Salary-API
 - What You'll See
 - **Quality Overview Dashboard**
-  <img width="1756" height="986" alt="Image" src="https://github.com/user-attachments/assets/ecec2f67-f630-4630-9f73-555134fccc4b" />
+  <img width="1102" height="936" alt="Image" src="https://github.com/user-attachments/assets/5a1914b3-3199-425f-a7a8-e2ba7d2defcf" />
 - **Code Issues Priority**
   <img width="1918" height="988" alt="Image" src="https://github.com/user-attachments/assets/fdfebcb1-4390-4f17-ba31-e29e67ae7954" />
 
