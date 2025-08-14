@@ -80,61 +80,64 @@ Static code analysis is the process of examining Python source code without exec
 
 ```mermaid
 graph TD
-    A[Developer Push Code] --> B[CI Pipeline Starts]
-    B --> C[Setup Python Environment]
-    C --> D[Install Dependencies]
-    D --> E[Static Code Analysis]
+    A[Developer Commits Code] --> B[CI Pipeline Triggers]
+    B --> C[Checkout Source Code]
+    C --> D[Static Analysis Phase]
     
-    E --> F[Flake8 - Style & Quality]
-    E --> G[Black - Code Formatting]
-    E --> H[Bandit - Security Scan]
-    E --> I[mypy - Type Checking]
+    D --> E[Black - Code Formatting Check]
+    D --> F[Bandit - Security Analysis]
+    D --> G[Pylint - Quality Analysis]
+    D --> H[Flake8 - Style Analysis]
     
-    F --> J{Quality Gate}
-    G --> J
-    H --> J
-    I --> J
+    E --> I[SonarQube Scanner]
+    F --> I
+    G --> I
+    H --> I
     
-    J -->|Pass| K[Run Unit Tests]
-    J -->|Fail| L[Pipeline Fails]
+    I --> J[SonarQube Analysis Engine]
+    J --> K[Static Code Examination]
+    K --> L[Quality Gate Evaluation]
     
-    K --> M[Generate Coverage Report]
-    M --> N[Deploy to Staging]
+    L -->|Pass| M[✅ Deployment Approved]
+    L -->|Fail| N[❌ Pipeline Blocked]
     
-    L --> O[Send Notification]
-    O --> P[Developer Fixes Issues]
-    P --> A
+    N --> O[Static Analysis Reports]
+    O --> P[Developer Reviews Issues]
+    P --> Q[Code Fixes Applied]
+    Q --> A
+    
+    M --> R[Deploy to Next Stage]
+    
 ```
-
 ---
 
 ## Popular Tools
 
 | Tool | Description | Key Features | Pros | Cons |
 |------|-------------|--------------|------|------|
+| **SonarQube CE** | Multi-language code quality platform with Python support | Security vulnerability analysis, Code quality metrics, Technical debt tracking, Web-based dashboard, Historical trend analysis | Comprehensive analysis, Excellent reporting, Industry standard, Multi-language support | Resource intensive, Complex setup, Limited features in free version |
 | **Flake8** | Lightweight wrapper combining PyFlakes, pycodestyle, and McCabe complexity checker | PEP 8 style checking, Syntax error detection, McCabe complexity analysis, Extensive plugin ecosystem, Fast execution | Fast and lightweight, Easy configuration, Great CI integration, Extensible with plugins | Less comprehensive than Pylint, Basic reporting, No security focus |
 | **Black** | Uncompromising Python code formatter that enforces consistent style | Automatic code formatting, Consistent style enforcement, Fast execution, Git integration, Minimal configuration | Eliminates style debates, Very fast execution, Easy adoption, Consistent results | Opinionated formatting, Limited customization options, Not a full analyzer |
 | **Pylint** | Comprehensive Python code analyzer with extensive checking capabilities | Code quality scoring (0-10), Error and warning detection, PEP 8 compliance checking, Custom plugin support, Detailed reporting | Very comprehensive analysis, Detailed reporting, Highly configurable, Industry standard | Can be slow on large codebases, Verbose output, Steep learning curve |
 | **Bandit** | Security-focused linter designed to find common security issues in Python code | Security vulnerability detection, Common security anti-patterns, JSON/XML reporting formats, Baseline support for legacy code, Low false positive rate | Security focused, Low false positives, Easy CI integration, Good documentation | Limited scope to security, No general quality checks, Requires security knowledge |
 | **mypy** | Static type checker for Python that helps catch type-related errors | Type error detection, Gradual typing support, IDE integration, Incremental checking, Protocol support | Catches type errors early, Improves code documentation, Growing adoption, Performance benefits | Requires type hints, Learning curve, Additional development overhead |
-| **SonarQube CE** | Multi-language code quality platform with Python support | Security vulnerability analysis, Code quality metrics, Technical debt tracking, Web-based dashboard, Historical trend analysis | Comprehensive analysis, Excellent reporting, Industry standard, Multi-language support | Resource intensive, Complex setup, Limited features in free version |
 
 ---
 
 ## Tool Comparison
 
-| Feature | Flake8 | Black | Pylint | Bandit | mypy | SonarQube |
+| Feature | SonarQube | Flake8 | Black | Pylint | Bandit | mypy |
 |---------|--------|-------|--------|--------|------|-----------|
-| **Cost** | Free | Free | Free | Free | Free | Free (CE) |
-| **Code Quality** | ✅ | ❌ | ✅ | ❌ | ✅ | ✅ |
-| **PEP 8 Checking** | ✅ | ✅ | ✅ | ❌ | ❌ | ✅ |
-| **Security Analysis** | ❌ | ❌ | Limited | ✅ | ❌ | ✅ |
-| **Type Checking** | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ |
-| **Performance** | Fast | Very Fast | Slow | Fast | Medium | Medium |
-| **Learning Curve** | Low | Very Low | High | Medium | High | Medium |
-| **CI Integration** | Excellent | Excellent | Good | Excellent | Good | Good |
-| **Reporting** | Good | Basic | Excellent | Good | Good | Excellent |
-| **Plugin Support** | Excellent | Limited | Good | Limited | Good | Good |
+| **Cost** | Free (CE) | Free | Free | Free | Free | Free |
+| **Code Quality** | Yes | Yes | No | Yes | No | Yes |
+| **PEP 8 Checking** | Yes | Yes | Yes | Yes | No | No |
+| **Security Analysis** | Yes | No | No | Limited | Yes | No |
+| **Type Checking** | No | No | No | No | Yes | No |
+| **Performance** | Medium | Fast | Very Fast | Slow | Fast | Medium |
+| **Learning Curve** | Medium | Low | Very Low | High | Medium | High |
+| **CI Integration** | Good | Excellent | Excellent | Good | Excellent | Good |
+| **Reporting** | Excellent | Good | Basic | Excellent | Good | Good |
+| **Plugin Support** | Good | Excellent | Limited | Good | Limited | Good |
 
 ---
 
@@ -161,10 +164,9 @@ graph TD
 
 | Category | Practice | Description |
 |----------|----------|-------------|
-| **Tool Selection** | Start with Essentials | Begin with Black and Flake8 for immediate impact |
-| | Add Security | Include Bandit for security vulnerability scanning |
-| | Gradual Type Checking | Introduce mypy gradually as codebase matures |
-| | Avoid Over-tooling | Don't overwhelm developers with too many tools initially |
+| **Tool Architecture** | SonarQube as Central Platform | Use SonarQube as primary static analysis hub with specialized tools |
+| | Layered Analysis | Black (formatting) → Bandit (security) → Pylint (quality) → SonarQube |
+| | Quality Gates | Configure strict quality gates for static analysis metrics |
 | **Configuration** | Use pyproject.toml | Centralize tool configuration in pyproject.toml file |
 | | Consistent Standards | Align all tools with same style and quality standards |
 | | Custom Rules | Create project-specific rules for business logic |
@@ -186,13 +188,11 @@ graph TD
 
 ## Recommendations & Conclusion
 
-### Primary Recommendation: Flake8 + Black + Bandit
+### **Primary Recommendation: SonarQube-Centric Static Analysis**
 
-
-| Recommended Toolchain       | Description                                                                                                                                            |
-| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Flake8 + Black + Bandit** | Chosen for optimal balance of comprehensiveness, performance, and ease of adoption for Python projects in both learning and professional environments. |
-
+| **Recommended Toolchain** | **Description** |
+| ------------------------- | --------------- |
+| **SonarQube + Black + Bandit + Pylint** | **SonarQube as central static analysis platform with specialized Python static analysis tools** |
 
 ### **Why This Combination**
 
@@ -213,6 +213,8 @@ graph TD
 | **Black**  | Automatic code formatting (eliminates style debates) |
 | **Flake8** | Code quality and PEP 8 compliance checking           |
 | **Bandit** | Security vulnerability detection                     |
+| **Pylint** | Import pylint-report.txt to SonarQube                |
+| **SonarQube**| Main platform orchestrating all static analysis    |
 
 ---
 
