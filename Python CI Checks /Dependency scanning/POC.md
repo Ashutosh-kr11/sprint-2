@@ -1,4 +1,4 @@
-<img src="https://github.com/user-attachments/assets/df5d77e2-2cae-4a07-a98d-533f4c757bba" alt="Image" width="100%" />
+<img src="https://github.com/user-attachments/assets/e42b1957-ba11-4325-97f4-169cddf662e3" alt="Image" width="100%" />
 
 # Python Dependency Scanning with `pip-audit` POC: Implementation Guide
 
@@ -8,7 +8,7 @@
 
 | **Author**     | **Created on** | **Version** | **Last updated on** | **Level** | **Reviewer**    |
 | -------------- | -------------- | ----------- | ------------------- | --------- | --------------- |
-| Ashutosh Kumar | 2025-08-14     | 1.0         | 2025-07-14          | Internal  | Siddharth Pawar |
+| Ashutosh Kumar | 2025-08-16     | 1.0         | 2025-07-16          | Internal  | Siddharth Pawar |
 
 ---
 
@@ -16,7 +16,7 @@
 
 * [Introduction](#introduction)
 * [Pre-requisites](#pre-requisites)
-* [Static Code Analysis for Python CI Checks Documentation](#static-code-analysis-for-python-ci-checks-documentation)
+* [Dependency Scanning for Python CI Checks Documentation](#dependency-scanning-for-python-ci-checks-documentation)
 * [Step-by-Step Instructions](#step-by-step-instructions)
   * [Pre-requisites Setup](#pre-requisites-setup)
   * [Project Setup and Scanning](#project-setup-and-scanning)
@@ -62,25 +62,32 @@ Follow this link for "Dependency Scanning for Python CI checks" Doc:
 
 ## **Step-by-Step Instructions**
 
-### Prerequisites Setup
+### Pre-requisites Setup
 
   #### 1. **System Preparation**
   Update and upgrade your Ubuntu system packages:
   ```bash
   sudo apt update && sudo apt upgrade -y
   ```
+  <img width="1918" height="916" alt="Image" src="https://github.com/user-attachments/assets/8b1a6681-ed21-4113-9453-958e24d09d21" />
+
   
   #### 2. **Install Required System Packages**
   Install Python and essential tools:
   ```bash
   sudo apt install python3 python3-pip python3.12-venv -y
   ```
+  <img width="1918" height="332" alt="Image" src="https://github.com/user-attachments/assets/57ad11b6-e087-4993-b4b0-6b8d588e0e4a" />
+
   
   #### 3. **Install pip-audit Tool**
   Install pip-audit globally for dependency scanning:
   ```bash
   sudo pip install pip-audit --break-system-packages
   ```
+
+  <img width="1918" height="898" alt="Image" src="https://github.com/user-attachments/assets/c1b802aa-14df-47e1-be10-4412864afdfc" />
+  
   > **Note:** The `--break-system-packages` flag is used for system-wide installation on newer Python versions.
 
 ### Project Setup and Scanning
@@ -92,6 +99,8 @@ Follow this link for "Dependency Scanning for Python CI checks" Doc:
   git clone https://github.com/OT-MICROSERVICES/notification-worker.git
   git clone https://github.com/OT-MICROSERVICES/attendance-api.git
   ```
+
+  <img width="1915" height="132" alt="Image" src="https://github.com/user-attachments/assets/9fae8312-34c9-4749-9624-ca85c64184fd" />
   
   #### 5. **Scan First Project (Attendance API)**
   
@@ -112,16 +121,32 @@ Follow this link for "Dependency Scanning for Python CI checks" Doc:
   pip install -r requirements.txt  # Install existing dependencies
   pip freeze > requirements.txt    # Generate/update requirements.txt
   ```
+  <img width="1918" height="355" alt="Image" src="https://github.com/user-attachments/assets/ea8ceb9b-b0ee-4526-a0ef-0303c26d64b0" />
   
   **d) Run dependency audit:**
   ```bash
-  pip-audit -r requirements.txt
+   # Audit using exported requirements.txt
+   pip-audit -r requirements.txt
+   
+   # Alternative: Audit Poetry environment directly
+   poetry run pip-audit
   ```
-  
+  <img width="1918" height="902" alt="Image" src="https://github.com/user-attachments/assets/95ea81bf-d9c5-4077-9092-017232a8988e" />
+
   **e) Deactivate virtual environment:**
   ```bash
   deactivate
   ```
+
+   > if Poetry is used for Dependency management
+      Generate requirements.txt from Poetry for pip-audit:   
+   ```bash
+       # Export Poetry dependencies to requirements.txt
+       poetry export -f requirements.txt --output requirements.txt --without-hashes
+          
+       # Alternative: Export with development dependencies
+       poetry export -f requirements.txt --output requirements.txt --without-hashes --with dev
+   ```
   
   #### 6. **Scan Second Project (Notification Worker)**
   
@@ -144,6 +169,7 @@ Follow this link for "Dependency Scanning for Python CI checks" Doc:
   # Run audit
   pip-audit -r requirements.txt
   ```
+  <img width="1918" height="268" alt="Image" src="https://github.com/user-attachments/assets/0bc37118-8034-45bd-86d6-f5e3758bb204" />
   
   **d) Deactivate virtual environment:**
   ```bash
