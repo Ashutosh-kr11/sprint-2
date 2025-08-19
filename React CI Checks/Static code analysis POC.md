@@ -35,7 +35,7 @@
 This Proof of Concept (POC) demonstrates how SonarQube can be integrated into React applications for comprehensive static code analysis. SonarQube helps identify potential security vulnerabilities, code quality issues, performance problems, accessibility violations, and TypeScript/JavaScript errors in your React codebase—which you can fix almost immediately. The following steps will guide you through setting up SonarQube, configuring React-specific analysis, and handling any detected issues.
 
 This POC covers:
-- JavaScript/TypeScript code quality analysis
+- JavaScript code quality analysis
 - React-specific patterns and best practices
 - Security vulnerability detection (XSS, unsafe patterns)
 - Bundle size and performance optimization
