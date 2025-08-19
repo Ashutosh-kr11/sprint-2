@@ -23,9 +23,8 @@
   * [Step 1: Setup OWASP ZAP](#step-1-setup-owasp-zap)
   * [Step 2: Start Golang App](#step-2-start-golang-app)
   * [Step 3: Run DAST Scan](#step-3-run-dast-scan)
-  * [Step 4: Integrate with CI/CD](#step-4-integrate-with-cicd)
-  * [Step 5: Review Reports](#step-5-review-reports)
-* [Troubleshooting Common Issues](#troubleshooting-common-issues)
+  * [Step 4: Review Reports](#step-4-review-reports)
+* [Troubleshooting](#troubleshooting)
 * [Conclusion](#conclusion)
 * [Contact Information](#contact-information)
 * [References](#references)
@@ -73,6 +72,7 @@ This POC covers:
 ```bash
 sudo snap install zaproxy --classic
 ```
+<img width="1913" height="138" alt="Image" src="https://github.com/user-attachments/assets/f0312236-b493-403c-96ff-d707e4b4120d" />
 
 **Option B: Using Docker (Recommended for CI/CD)**
 
@@ -84,32 +84,22 @@ docker pull owasp/zap2docker-stable
 
 ### Step 2: Start Golang App
 
-Example Go web app (REST API or web server):
+Clone OT-MICROSERVICES/employee-api:
 
-```go
-package main
-
-import (
-	"fmt"
-	"net/http"
-)
-
-func handler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hello, Golang DAST POC!")
-}
-
-func main() {
-	http.HandleFunc("/", handler)
-	fmt.Println("Server running on http://localhost:8080")
-	http.ListenAndServe(":8080", nil)
-}
+```bash
+git clone https://github.com/OT-MICROSERVICES/employee-api.git
 ```
+<img width="1918" height="110" alt="Image" src="https://github.com/user-attachments/assets/8fd55b3c-99b2-43c1-8aca-2fcc6126c50b" />
 
 Run it:
 
 ```bash
-go run main.go
+cd employee-api 
+make build 
+./employee-api
 ```
+
+<img width="1918" height="620" alt="Image" src="https://github.com/user-attachments/assets/95e7e5d8-d512-445f-acf3-49fb17a473f6" />
 
 ---
 
@@ -118,8 +108,10 @@ go run main.go
 **Quick ZAP Scan (CLI):**
 
 ```bash
-zaproxy -cmd -quickurl http://localhost:8080 -quickout zap_report.html
+zaproxy -cmd -port 9090 -quickurl http://localhost:8080/swagger/index.html -quickout /home/ashutosh-kr/zap_report.html
 ```
+<img width="1918" height="178" alt="Image" src="https://github.com/user-attachments/assets/983f1637-c1c0-4ff7-b6df-0eac29a96ef1" />
+
 
 **Using Docker (Baseline Scan):**
 
@@ -136,9 +128,11 @@ docker run -t owasp/zap2docker-stable zap-baseline.py \
 * `zap_report.html` → Open in browser to review findings
 * JSON/XML outputs → integrate into security dashboards
 
+<img width="1918" height="985" alt="Image" src="https://github.com/user-attachments/assets/b610243d-84d8-42fc-9c20-abfbd2f9bf20" />
+
 ---
 
-## **Troubleshooting Common Issues**
+## **Troubleshooting**
 
 | Issue                          | Quick Fix                                                     |
 | ------------------------------ | ------------------------------------------------------------- |
@@ -146,6 +140,7 @@ docker run -t owasp/zap2docker-stable zap-baseline.py \
 | `Connection refused` in Docker | Use `host.docker.internal` instead of `localhost`             |
 | Reports empty                  | Use `zap-full-scan.py` for deeper analysis                    |
 | Long scans                     | Prefer `zap-baseline.py` for quicker passive scans            |
+| use `-port`                    | change port                                                   |
 
 ---
 
@@ -174,6 +169,3 @@ This ensures stronger **security posture**, faster feedback, and compliance with
 | [ZAP GitHub Actions](https://github.com/marketplace/actions/owasp-zap-full-scan) | Ready-to-use CI integration       |
 | [Go Security Policy](https://golang.org/security)                                | Official Golang security guidance |
 
----
-
-👉 Do you want me to prepare this as a **Markdown `.md` file** (ready to drop in your repo like your SonarQube doc), with example screenshots placeholders, so it’s in the exact same format?
