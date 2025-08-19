@@ -128,8 +128,7 @@ docker run -t owasp/zap2docker-stable zap-baseline.py \
 * `zap_report.html` → Open in browser to review findings
 * JSON/XML outputs → integrate into security dashboards
 
-<img width="1918" height="985" alt="Image" src="https://github.com/user-attachments/assets/b610243d-84d8-42fc-9c20-abfbd2f9bf20" />
-
+<img width="1918" height="987" alt="Image" src="https://github.com/user-attachments/assets/b0263a69-95dc-495b-a534-ca8b5a89a423" />
 ---
 
 ## **Troubleshooting**
