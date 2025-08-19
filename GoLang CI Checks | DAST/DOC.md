@@ -15,8 +15,8 @@
 ## Table of Contents
 1. [Introduction](#introduction)
 2. [What is DAST?](#what-is-dast)
-3. [Why DAST for Golang Applications?](#why-dast-for-golang-applications)
-4. [DAST Workflow](#dast-workflow)
+3. [Why DAST for Golang?](#why-dast-for-golang)
+4. [Workflow Diagram](#workflow-diagram)
 5. [DAST Tools for Golang Applications](#dast-tools-for-golang-applications)
 6. [Tool Comparison](#tool-comparison)
 7. [Advantages](#advantages)
@@ -67,15 +67,21 @@ Dynamic Application Security Testing (DAST) is a black-box security testing appr
 ## Workflow Diagram
 
 ```mermaid
-graph LR
-    A[Deploy Go App] --> B[Configure DAST Tool]
-    B --> C[Run Security Scan]
-    C --> D[Analyze Results]
-    D --> E[Generate Report]
-    E --> F[Fix Issues]
-    F --> G[Re-test]
-    G --> H[Pass/Fail Gate]
-
+graph TD
+    A[Code Push] --> B[Build Go App]
+    B --> C[Run Unit Tests]
+    C --> D[Deploy to Test Environment]
+    D --> E[Wait for App Startup]
+    E --> F[Run DAST Scan]
+    F --> G{Vulnerabilities Found?}
+    G -->|Yes| H[Generate Security Report]
+    G -->|No| I[Deploy to Production]
+    H --> J[Fail Pipeline]
+    J --> K[Notify Developer]
+    K --> L[Fix Security Issues]
+    L --> A
+    I --> M[Success]
+    
 ```
 
 ---
