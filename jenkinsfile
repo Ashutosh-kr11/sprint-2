@@ -1,0 +1,420 @@
+pipeline {
+    agent any
+    
+    // Environment variables for FOSSA configuration
+    environment {
+        FOSSA_API_KEY = credentials('fossa-api-key') // Store in Jenkins credentials
+        FOSSA_PROJECT = "${env.JOB_NAME}" // Use Jenkins job name as project identifier
+        FOSSA_REVISION = "${env.GIT_COMMIT}" // Use Git commit hash as revision
+        FOSSA_ENDPOINT = 'https://app.fossa.com' // FOSSA free tier endpoint
+        
+        // Policy enforcement settings
+        FAIL_ON_POLICY_VIOLATIONS = 'true'
+        TIMEOUT_MINUTES = '30'
+        
+        // Compliance report settings
+        GENERATE_REPORTS = 'true'
+        REPORT_FORMAT = 'json,html'
+    }
+    
+    // Build triggers - scan on every commit and nightly
+    triggers {
+        // Scan on every commit to main branches
+        githubPush()
+        // Additional nightly scan for comprehensive monitoring
+        cron('H 2 * * *') // 2 AM daily
+    }
+    
+    options {
+        // Timeout for the entire pipeline
+        timeout(time: 45, unit: 'MINUTES')
+        
+        // Keep build logs for compliance audit trail
+        buildDiscarder(logRotator(
+            numToKeepStr: '50',
+            artifactNumToKeepStr: '20'
+        ))
+        
+        // Prevent concurrent builds on same branch
+        disableConcurrentBuilds()
+    }
+    
+    stages {
+        stage('🔍 Pre-Scan Setup') {
+            steps {
+                echo "🚀 Starting FOSSA License Scan Pipeline"
+                echo "📋 Project: ${FOSSA_PROJECT}"
+                echo "🔗 Revision: ${FOSSA_REVISION}"
+                
+                // Clean workspace for accurate scanning
+                cleanWs()
+                
+                // Checkout code
+                checkout scm
+                
+                // Validate FOSSA API key exists
+                script {
+                    if (!env.FOSSA_API_KEY) {
+                        error "❌ FOSSA API Key not found in Jenkins credentials!"
+                    }
+                }
+                
+                // Display dependency summary
+                echo "📦 Scanning dependencies in: ${pwd()}"
+                sh '''
+                    echo "📊 Repository Statistics:"
+                    find . -name "package.json" -o -name "pom.xml" -o -name "requirements.txt" -o -name "go.mod" -o -name "Gemfile" -o -name "composer.json" | wc -l | xargs echo "Manifest files found:"
+                '''
+            }
+        }
+        
+        stage('🛠️ Install FOSSA CLI') {
+            steps {
+                echo "⬇️ Installing FOSSA CLI..."
+                script {
+                    // Install FOSSA CLI (free tier)
+                    sh '''
+                        # Download and install FOSSA CLI
+                        curl -H 'Cache-Control: no-cache' https://raw.githubusercontent.com/fossas/fossa-cli/master/install-latest.sh | bash
+                        
+                        # Verify installation
+                        fossa --version
+                        
+                        echo "✅ FOSSA CLI installed successfully"
+                    '''
+                }
+            }
+        }
+        
+        stage('🔍 FOSSA Analysis') {
+            steps {
+                echo "🔬 Running FOSSA license analysis..."
+                script {
+                    try {
+                        // Run FOSSA analysis
+                        sh '''
+                            echo "🔍 Starting FOSSA analysis..."
+                            
+                            # Initialize FOSSA project (if not exists)
+                            fossa init
+                            
+                            # Run analysis with comprehensive options
+                            fossa analyze \
+                                --project "${FOSSA_PROJECT}" \
+                                --revision "${FOSSA_REVISION}" \
+                                --endpoint "${FOSSA_ENDPOINT}" \
+                                --debug
+                            
+                            echo "✅ FOSSA analysis completed successfully"
+                        '''
+                    } catch (Exception e) {
+                        echo "❌ FOSSA analysis failed: ${e.getMessage()}"
+                        currentBuild.result = 'FAILURE'
+                        throw e
+                    }
+                }
+            }
+            
+            post {
+                always {
+                    // Archive analysis logs for debugging
+                    archiveArtifacts(
+                        artifacts: '.fossa.yml,fossa-deps.json',
+                        allowEmptyArchive: true,
+                        fingerprint: true
+                    )
+                }
+            }
+        }
+        
+        stage('⚖️ License Policy Check') {
+            steps {
+                echo "📋 Checking license compliance policies..."
+                script {
+                    try {
+                        // Wait for FOSSA to process and run policy checks
+                        timeout(time: 10, unit: 'MINUTES') {
+                            sh '''
+                                echo "⏳ Waiting for FOSSA policy evaluation..."
+                                
+                                # Test for policy violations
+                                fossa test \
+                                    --project "${FOSSA_PROJECT}" \
+                                    --revision "${FOSSA_REVISION}" \
+                                    --endpoint "${FOSSA_ENDPOINT}" \
+                                    --timeout 600
+                                
+                                echo "✅ No license policy violations found!"
+                            '''
+                        }
+                    } catch (Exception e) {
+                        echo "⚠️ License policy violations detected!"
+                        
+                        if (env.FAIL_ON_POLICY_VIOLATIONS == 'true') {
+                            echo "🚫 Build failed due to policy violations"
+                            currentBuild.result = 'FAILURE'
+                            error "License policy violations found. Check FOSSA dashboard for details."
+                        } else {
+                            echo "⚠️ Policy violations found but build continues (warning mode)"
+                            currentBuild.result = 'UNSTABLE'
+                        }
+                    }
+                }
+            }
+        }
+        
+        stage('📊 Generate Compliance Reports') {
+            when {
+                expression { env.GENERATE_REPORTS == 'true' }
+            }
+            steps {
+                echo "📈 Generating compliance reports..."
+                script {
+                    try {
+                        sh '''
+                            echo "📋 Creating Software Bill of Materials (SBOM)..."
+                            
+                            # Generate comprehensive reports
+                            mkdir -p reports
+                            
+                            # Get project data for reports
+                            fossa report \
+                                --project "${FOSSA_PROJECT}" \
+                                --revision "${FOSSA_REVISION}" \
+                                --type dependencies \
+                                --format json > reports/dependencies.json
+                            
+                            # Generate attribution report (for license compliance)
+                            fossa report \
+                                --project "${FOSSA_PROJECT}" \
+                                --revision "${FOSSA_REVISION}" \
+                                --type attribution \
+                                --format txt > reports/attribution.txt
+                            
+                            echo "✅ Compliance reports generated successfully"
+                            echo "📁 Reports available in: reports/"
+                            ls -la reports/
+                        '''
+                    } catch (Exception e) {
+                        echo "⚠️ Report generation failed: ${e.getMessage()}"
+                        // Don't fail build for report generation issues
+                        currentBuild.result = 'UNSTABLE'
+                    }
+                }
+            }
+            
+            post {
+                always {
+                    // Archive compliance reports
+                    archiveArtifacts(
+                        artifacts: 'reports/**/*',
+                        allowEmptyArchive: true,
+                        fingerprint: true
+                    )
+                    
+                    // Publish reports for easy access
+                    publishHTML([
+                        allowMissing: false,
+                        alwaysLinkToLastBuild: true,
+                        keepAll: true,
+                        reportDir: 'reports',
+                        reportFiles: '*.html',
+                        reportName: 'FOSSA License Report',
+                        reportTitles: 'License Compliance Report'
+                    ])
+                }
+            }
+        }
+        
+        stage('🔔 Notification & Audit Trail') {
+            steps {
+                script {
+                    // Create audit summary
+                    def scanSummary = """
+                    🔍 FOSSA License Scan Summary
+                    ═══════════════════════════════
+                    📦 Project: ${FOSSA_PROJECT}
+                    🔗 Revision: ${FOSSA_REVISION}
+                    ⏰ Scan Time: ${new Date()}
+                    🎯 Build Status: ${currentBuild.result ?: 'SUCCESS'}
+                    📊 FOSSA Dashboard: ${FOSSA_ENDPOINT}/projects/${FOSSA_PROJECT}
+                    """
+                    
+                    echo scanSummary
+                    
+                    // Write summary to file for archiving
+                    writeFile file: 'fossa-scan-summary.txt', text: scanSummary
+                    
+                    // Send notifications based on result
+                    if (currentBuild.result == 'FAILURE') {
+                        echo "🚨 CRITICAL: License policy violations found!"
+                        echo "🔗 Check FOSSA dashboard for detailed violation report"
+                    } else if (currentBuild.result == 'UNSTABLE') {
+                        echo "⚠️ WARNING: License issues detected but build continues"
+                    } else {
+                        echo "✅ SUCCESS: All license checks passed!"
+                    }
+                }
+            }
+            
+            post {
+                always {
+                    // Archive scan summary
+                    archiveArtifacts(
+                        artifacts: 'fossa-scan-summary.txt',
+                        allowEmptyArchive: true,
+                        fingerprint: true
+                    )
+                }
+                
+                // Email notifications for critical issues
+                failure {
+                    script {
+                        if (env.NOTIFY_EMAIL) {
+                            emailext(
+                                subject: "🚨 License Scan Failed: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                                body: """
+                                License policy violations detected!
+                                
+                                Project: ${FOSSA_PROJECT}
+                                Build: ${env.BUILD_URL}
+                                FOSSA Dashboard: ${FOSSA_ENDPOINT}/projects/${FOSSA_PROJECT}
+                                
+                                Please review the violations and take corrective action.
+                                """,
+                                to: env.NOTIFY_EMAIL,
+                                attachLog: true
+                            )
+                        }
+                    }
+                }
+                
+                // Slack notifications (optional)
+                unstable {
+                    script {
+                        if (env.SLACK_CHANNEL) {
+                            slackSend(
+                                channel: env.SLACK_CHANNEL,
+                                color: 'warning',
+                                message: """
+                                ⚠️ License Scan Warning: ${env.JOB_NAME} #${env.BUILD_NUMBER}
+                                Some license issues detected but build continues.
+                                Dashboard: ${FOSSA_ENDPOINT}/projects/${FOSSA_PROJECT}
+                                """
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    post {
+        always {
+            echo "🏁 FOSSA License Scan Pipeline Completed"
+            
+            // Clean up temporary files but keep reports
+            sh '''
+                echo "🧹 Cleaning up temporary files..."
+                # Keep important files for audit trail
+                find . -name "*.tmp" -delete 2>/dev/null || true
+                echo "✅ Cleanup completed"
+            '''
+        }
+        
+        success {
+            echo "🎉 License scan completed successfully - all checks passed!"
+        }
+        
+        failure {
+            echo "💥 License scan failed - check logs and FOSSA dashboard for details"
+        }
+        
+        unstable {
+            echo "⚠️ License scan completed with warnings - review issues in FOSSA dashboard"
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 📋 SETUP INSTRUCTIONS
+// ═══════════════════════════════════════════════════════════════
+
+/*
+🔧 JENKINS SETUP REQUIREMENTS:
+
+1. 🔑 CREDENTIALS SETUP:
+   - Add FOSSA API key in Jenkins credentials as 'fossa-api-key'
+   - Get free API key from: https://app.fossa.com/account/settings/integrations/api_tokens
+
+2. 📦 REQUIRED PLUGINS:
+   - Pipeline Plugin
+   - Credentials Plugin  
+   - HTML Publisher Plugin (for reports)
+   - Email Extension Plugin (for notifications)
+   - Slack Notification Plugin (optional)
+
+3. 🛠️ AGENT REQUIREMENTS:
+   - curl (for FOSSA CLI installation)
+   - Git access for code checkout
+   - Internet access for FOSSA API calls
+
+4. ⚙️ OPTIONAL ENVIRONMENT VARIABLES:
+   - NOTIFY_EMAIL: Email address for failure notifications
+   - SLACK_CHANNEL: Slack channel for notifications
+   - FOSSA_PROJECT: Override default project name
+   
+5. 🔐 FOSSA FREE TIER LIMITS:
+   - Up to 100 dependencies per project
+   - Community support only
+   - Basic policy enforcement
+   - Standard vulnerability database
+
+═══════════════════════════════════════════════════════════════
+
+🎯 BEST PRACTICES IMPLEMENTED:
+
+✅ Automated CI/CD Integration
+✅ Policy-based Build Blocking  
+✅ Comprehensive Compliance Reports
+✅ SBOM Generation
+✅ Audit Trail Maintenance
+✅ Notification System
+✅ Error Handling & Recovery
+✅ Timeout Protection
+✅ Artifact Archiving
+✅ Dashboard Integration
+
+═══════════════════════════════════════════════════════════════
+
+🚀 USAGE EXAMPLES:
+
+1. 📝 Basic Project Setup:
+   ```bash
+   # Create .fossa.yml in your repository root
+   version: 3
+   project:
+     name: "my-awesome-project"
+     team: "engineering"
+     policy: "default"
+   ```
+
+2. 🔧 Custom Policy Configuration:
+   ```yaml
+   # In FOSSA dashboard, create custom policies:
+   # - Block GPL licenses for commercial projects
+   # - Allow only pre-approved licenses
+   # - Set vulnerability thresholds
+   ```
+
+3. 📊 Jenkins Job Configuration:
+   ```groovy
+   // In Jenkins job configuration:
+   parameters {
+       booleanParam(name: 'SKIP_LICENSE_SCAN', defaultValue: false, description: 'Skip license scanning for hotfixes')
+       choice(name: 'SCAN_DEPTH', choices: ['quick', 'full'], description: 'Scan depth level')
+   }
+   ```
+
+═══════════════════════════════════════════════════════════════
+*/
